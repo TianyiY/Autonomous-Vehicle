@@ -1,0 +1,14 @@
+Introduction to Localisation
+
+Localisation allows a car to know precisely where it is.
+ *GPS is not precise enough (accuracy of the width of a lane, 1-3m. Sometimes as broad as 10-15m.)
+ *Robot takes info about environment and compares it to what it knows about the real world (a map).
+ *Intuition: Reducing uncertainty about location using information e.g. seeing the Eiffel Tower.
+Use onboard sensors (lidar, radar) to measure distance to static obstacles and bearings in the local coordinate system of our car. Some obstacles that are observed by onboard sensors are also on the map (which has a global coordinate system.)
+ *Need to match observations with map information (transform both coordinates) with high precision. 
+
+What is localisation?
+ *Measurement of door transforms our belief function: increased belief of locations next to the door, decreased belief of locations not next to the door.
+ *Third dist: Assume robot moves to the right by a certain distance. Shift the belief to the right by a certain dist (but peaks are flatter).
+ *Fourth dist: Sees door again after a small amout of rightward movement.
+
