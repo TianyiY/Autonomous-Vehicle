@@ -1,0 +1,57 @@
+Kalman Filters
+
+Sensors:
+ *Spinning Laser range finder: takes distance scans 10x / second, about 1M data points (each time). -> spot cars so you don't run into them.
+ *Camera on top.
+ *Stereo camera system
+ *Antennas for GPS at rear to estimate where car is in the world.
+
+Tracking using Kalman Filters:
+ *Similar to Monte Carlo localisation, except it's
+  *continuous (as opposed to divided into discrete grids)
+  *uni-model (as opposed to multi-modal)
+ *Kalman filter estimates future locations based on previous locational datapoints (even if they're noisy).
+
+Gaussian:
+ *1-D Gaussian N(mu, sigma^2) -> only need to estimate two parameters.
+  *mu is the mean
+  *sigma^2 is the variance: measure of uncertainty
+ *Facts:
+  *Continuous distribution, vs Monte Carlo localisation where distribution estimated by a histogram.
+  *Area under the Gaussian sums to 1.
+  *Exponential of a quadratic function
+ *We prefer low-variance Gaussians for locating cars.
+
+Kalman Filter:
+Iterates two things, as with localisation:
+ *Measurement updates
+  *By updating belief by a multiplicative factor (multiplying the Gaussians)
+  *Uses Bayes Rule
+ *Prediction (Motion updates in localisation)
+  *By performing a convolution (addition)
+  *Uses total Probability to keep track of where all of our probability 'goes' when we move
+
+Measurement cycle:
+ *Mean:
+  *The lower the variance of our new measurement, the more weight we give it (pull our prior mean towards the measurement mean).
+ *Variance:
+  *More measurements -> greater certainty (lower variance). New Gaussian has lower variance than either the prior or the measurement Gaussian.
+  *Unaffected by means
+
+Motion Update (Prediction):
+ *Suppose you move to the right by a certain distance. Your movement has some uncertainty, so variance increases.
+
+Multi-dimensional Kalman Filter:
+ *Implicitly figures out velocity from seeing multiple positions, and from that makes predictions about future location.
+
+Multivariate Gaussians:
+ *E.g. contour lines of a 2D Gaussian: Tilted Gaussian (not parallel or perpendicular to x or y axes): x and y correlated.
+ *Build 2-dimensional estimate: one for location, one for velocity.
+ *If we project the new 2D Gaussian into the space of velocity or x, we can't predict the velocity or the location. But this Gaussian expresses that velocity is correlated to location.
+ *Now we fold in the second observation (green)
+ *and we can have our new predicted Gaussians (purple / blue Gaussians on the red Gaussian)
+  *img Subsequent observables give us information about the hidden variables, so we can estimate hidden variables.
+
+Designing Kalman Filters:
+ *State transition function
+ *Measurement function
