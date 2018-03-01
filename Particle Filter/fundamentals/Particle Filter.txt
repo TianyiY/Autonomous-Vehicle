@@ -1,0 +1,48 @@
+Particle Filters:
+ *Easist to program and the most flexible among our three types of filters
+
+Three Types of Filters:
+ *Histogram:
+  *Discrete since dist defined over a finite set of bins.
+   *Exponential (think of a grid in k dims)
+ *Kalman: Single Gaussian -> unimodal
+  *Quadratic since only represented by mean and covariance matrix
+  *Approximate since KFs are only exact for linear systems
+ *Particle filters:
+  *Scale exponentially in some applications (don't use for more than 4 dim)
+  *Scale well in some tracking applications
+
+Particle Filter:
+ *Blue stripes: Sonar sensors (sound)
+ *Each red dot is a discrete guess as to where we might be (x, y coord, heading)
+ *Particles that are more consistent with the measurement are more likely to survive
+ *Two clouds until you enter one of the offices because because the corridor is symmetric
+
+Implememtation:
+ *Particle filter here maintains n=1000 random guesses as to where we are. Implement using 1000 robots.
+ *Importance weight: Mismatch of actual and predicted measurement.
+ *The larger the weight, the more important the measurement.
+ *The higher the importance (weight), the higher the probability of the particle 'surviving'
+ *Usually assumes there is measurement noise.
+ *Resampling: Randomly redrawing particles from existing ones with replacement (probability of drawing proportional to weight)
+ *Particles cluster around regions of high posterior probability.
+
+Differences between lesson implementation and Google Car implementation:
+ *Robot model: uses Bicycle Model
+ *Sensor data: Matching snapshots to maps (vs using landmarks)
+
+Implementation of a Particle Filter:
+ *1: Initialisation
+ *3: Prediction step (add control input)
+ *4-5: Update step
+ *7-10: Resampling step
+ *11: Bayes Filter Posterior
+
+Initialisation:
+ *Number of sampling points
+  *Want enough to cover the possible positions.
+  *Too many particles slow down your filter (need to localise in real time).
+ *Ways of sampling
+  *Uniformly (not practical if state space is too large, e.g. entire surface of the earth).
+  *Sample around some initial estimate, e.g. GPS.
+   *Gaussian
