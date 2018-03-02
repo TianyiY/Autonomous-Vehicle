@@ -1,0 +1,47 @@
+Model Predictive Control:
+ *Reframe problem of following trajectory as an optimisation problem
+ *Predict result of trajectory and select trajectory with minimum cost
+ *Implement first set of actuation. Take new state to calculate new optimal trajectory. Incremental calculating: 'receding horizon control'.
+
+Cost functions:
+Cost elements:
+ *State
+  *Cross-track error
+  *Orientation error
+  *Velocity error (velocity relative to reference velocity)
+  *Euclidean distance between current position and destination
+ *Control input
+  *Large steering angle (jerking steering wheel)
+   *cost += pow(delta[t], 2);
+  *Change-rate of control input to add smoothness
+   *for (int t = 0; t < N-1; t++) {
+     cost += pow(delta[t+1] - delta[t], 2)
+     cost += pow(a[t+1] - a[t], 2)
+    }
+  *Large change in steering angle: (larger multiplier -> smoother steering angle change)
+   *fg[0] += multiplier * CppAD::pow(vars[delta_start + i + 1] - vars[delta_start + i], 2);
+
+Notes:
+ *Prediction horizon T = N * dt
+  *T: Duration over which future predictions are made
+  *N: Number of timesteps in the horizon
+  *dt: time elapsed between actuations, i.e. length of each timestep
+  *Guidelines: T should be as large as possible, dt as small as possible.
+   *But if T > a few seconds, environment changes enough that prediction doesn't make sense
+   *Large N: high computational cost
+   *Large dt: infrequent actuations, hard to accurately approximate a continuous reference trajectory (discretisation error)
+
+Model Predictive Control Algorithm:
+Setup:
+ *Define the length of the trajectory, N, and duration of each timestep, dt.
+ *Define vehicle dynamics and actuator limitations along with other constraints.
+ *Define the cost function.
+Loop:
+ *We pass the current state as the initial state to the model predictive controller.
+ *We call the optimization solver. Given the initial state, the solver will return the vector of control inputs that minimizes the cost function. The solver we'll use is called Ipopt.
+ *We apply the first control input to the vehicle.
+ *Back to the first step.
+
+Problem: Latency:
+ *Delay between actuation command and execution (e.g. 100ms)
+ *Can model into system with MPC (vs PID controller hard to do that)

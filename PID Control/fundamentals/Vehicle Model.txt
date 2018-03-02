@@ -1,0 +1,38 @@
+Vehicle Models:
+ *Models that describe how the vehicle moves
+ *Tradeoff between tractability and accuracy of models
+ *Kinematic and dynamic models:
+  *Kinematic models
+   *Ignore tire forces, gravity and mass
+   *Work better at low and moderate speeds
+  *Dynamic models
+   *May encompass tire forces, longitudinal and lateral forces, inertia, gravity, air resistance, drag, mass, and the geometry of the vehicle
+   *May even take internal vehicle forces into account - for example, how responsive the chassis suspension is
+
+Vehicle State [x,y,?,v]:
+X, y coordinates
+Orientation
+Velocity
+
+Kinematic models:
+Actuators [d,a]:
+Actuator inputs allow us to control the vehicle state.
+Most cars have three actuators:
+ *the steering wheel
+ *the throttle pedal and
+ *the brake pedal.
+For simplicity we'll consider the throttle and brake pedals as a singular actuator, with negative values signifying braking and positive values signifying acceleration.
+Simplified:
+ *d for steering angle and a for acceleration (throttle/brake combined).
+x = x + v cos(psi) dt 
+y = y + v sin(psi) dt
+v=v+a*dt
+ *a in [-1,1]
+?=?+(v/L_f)*d*dt
+ *Add multiplicative factor of the steering angle, d, to ?
+ *L_f measures the distance between the front of the vehicle and its center of gravity.
+  *The larger the vehicle, the slower the turn rate.
+  *Testing the validity of a model:
+   *If the radius of the circle generated from driving the test vehicle around in a circle with a constant velocity and steering angle is similar to that of your model in the simulation, then you're on the right track.
+
+Global Kinematic Model
