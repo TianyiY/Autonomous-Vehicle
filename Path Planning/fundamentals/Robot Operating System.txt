@@ -1,0 +1,58 @@
+ROS -> Robot Operating System (open source framework that simplifies robot development. Provides:
+ *Means of talking to hardware without writing your own device drivers
+ *Processes to communicate with each other via message passing
+ *Tools for visualisation, simulation and analysis
+ *Easier deployment and development of software
+
+Common components of a generic robot:
+ *Sensors for perception
+ *Software for making high-level decisions
+ *Motors and controllers for actuation
+
+Nodes and topics
+ROS breaks down these processes into many small processes called nodes.
+ *e.g. position estimator, wheel encoder, camera, motor control
+How nodes can communicate with each other:
+ *Through the ROS master.
+  *ROS master acts as a:
+   *Manager of all the nodes.
+   *Parameter server. Stores parameter and config values.
+ *Message-passing over topics (named buses)
+  *Way for nodes to share data with each other
+  *Bus: Pipe between nodes through which messages flow
+  *Node must publish to a topic to send a message to it, or subscribe to a topic to receive a message from it.
+  *A single node may simultaneously publish and subscribe to many topics.
+
+Message passing
+ *Over 200 different message types (on a ROS distribution) for communicating physical quantities (s, v, a, rotations, t), sensor readings (laser scans, point clouds, inertial measurements),
+ *Can define your own message types.
+
+Services
+ *Allow passing of messages between nodes on a one-to-one basis using a request-response pattern.
+ *Not a bus, no publishers or subscribers.
+ *Useful if e.g. a behaviour executor only wants to capture an image from the camera every once in a while.
+  *Can trigger new sensor measurements
+
+Compute Graphs
+ *Use the tool rqt_graph to visualise the compute graph of an ROS system.
+
+TurtleSim
+ *History of turtles in robotics
+  *William Gray Walter created robotic turtles as some of the first autonomous devices in the 1940s
+  *Seymour Papert used turtles in robotics education in the 1960s at MIT (LOGO programming language)
+
+ROS commands
+ *Run ROS master process: roscore
+ *Run turtlesim node
+  *rosrun turtlesim turtlesim_node
+ *List the nodes that are running
+  *rosnode list: queries rosmaster
+  *ROSOUT aggregates, filters and logs messages to a text file.
+ *List all topics: rostopic list
+ *Get information about a specific topic: rostopic info $topic_name
+  *e.g. rostopic info /turtle1/cmd_vel
+ *Show message information: rosmsg show geometry_msgs/Twist
+  *Shows definition Twist type from the package geometry_msgs
+ *`rosed geometry_msgs/Twist'
+ *Echo messages on a topic: rostopic echo TOPIC_NAME ### Other commands
+ *TAB twice: view commands that start with the char sequence you've typed.

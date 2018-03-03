@@ -1,0 +1,29 @@
+Fully Convolutional Networks
+
+Problems with CNNs
+Typical convolution neural networks end with a fully connected layer. They
+ *cannot answer questions like 'where is the hotdog in this picture?' because fully connected layers don't preserve spatial information.
+ *can only accept input of a certain size (constrained by fully connected layer)
+
+Features of Fully Convolutional Networks (FCNs)
+ *replace fully connected layers by one-by-one convolutional layers
+  *-> can retain spatial information
+ *Up-sample using transposed convolutional layers
+ *Have skip connections: allow the network to use information from multiple precision scales.
+Structurally, FCNs comprise:
+ *Encoder: extracts features from the image
+  *Convolutional layers
+   *e.g. VGG, ResNet
+ *Decoder: upscales the output of the encoder such that it's the same size as the original image
+
+Transposed Convolutions
+ *Conv in which forward and backward passes are swapped.
+ *Also called deconvolution (since it undoes the previous convolution)
+   tf.layers.conv2d_transpose(input, num_output_channels,
+                             kernel_size,
+                             num_strides)
+
+Skip Connections
+ *Retaining information
+ *Connect output of one layer to a non-adjacentl ayer
+ *Allow network to use information from multiple resolutions

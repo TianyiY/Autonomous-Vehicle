@@ -1,0 +1,44 @@
+Approaches to Object Detection
+ *Solution 1: Bounding Boxes
+  *Neural network figures out where object is, and draws a bounding box around it
+  *e.g. YOLO and SSD models
+   *perform well at high FPS
+   *But cannot draw a bounding box around curved objects
+ *Solution 2: Semantic Segmentation
+  *Pixel-level classification.
+  *In scene understanding, people tend to train multiple decoders:
+   *Segmentation: classify pixels.
+   *Depth decoder: predicts how far away the pixel is
+    *Use info to reconstruct rich 3D scene.
+
+Metric for Semantic Segmentation: Intersection Over Unions (IOU)
+ *IOU = Intersection set / Union set, <= 1
+  *Intersection set: AND operation: pixel that is both truly part of that class and classified as part of the class by the network
+  *Union set: OR operation: pixel that is either truly part of the class or classified as part of the class by the network
+ *Used to measure the performance of a model on a semantic segmentation task.
+  *Can also consider mean IOU.
+ *Use by calling tf.metric.mean_iou.
+
+Example of a model used for semantic segmentation: FCN-8 Architecture
+ *Encoder:
+  *VGG16 model pre-trained on ImageNet for classification
+  *Replace fully-connected layers by 1-by-1 convolutions
+   *e.g. ```num_classes = 2 output = tf.layers.dense(input, num_classes) To:
+            num_classes = 2 output = tf.layers.conv2d(input, num_classes, 1, strides=(1,1)) ```
+   *Downsampling using a 1-by-1 convolution
+ *Decoder
+  *Upsample input to the original image size:
+   *output = tf.layers.conv2d_transpose(input, num_classes, 4, strides=(2, 2))
+
+Add skip connections between convolution layers
+  # make sure the shapes are the same!
+ input = tf.add(input, pool_4)
+  input = tf.layers.conv2d_transpose(input, num_classes, 4, strides=(2, 2))
+  input = tf.add(input, pool_3)
+ Input = tf.layers.conv2d_transpose(input, num_classes, 16, strides=(8, 8))
+
+Define a loss
+ *Recall the goal is to assign each pixel to the appropriate class.
+ *-> use cross entropy loss.
+ *logits = tf.reshape(input, (-1, num_classes))
+  cross_entropy_loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits, labels))

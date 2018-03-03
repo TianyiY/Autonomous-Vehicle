@@ -1,0 +1,122 @@
+Trajectory Generation
+ *Define motion planning problem and classify planning approaches
+ *Review of A*
+ *Hybrid A*: not purely discrete or continuous
+ *Sampling-based Polynomial trajectory generation: useful for highway driving
+
+Motion Planning Problem
+Configuration space: all the possible configurations of a robot in a given world. (e.g. 3D if we conside (x,y,heading)).
+Given:
+ *Start configuration (usually from localisation and sensors)
+ *goal configuration (from behaviour)
+ *Constraints: speed constraints, how obstacle regions (pedestrians, other cars) will evolve with time
+
+Types of Motion Planning Algorithms
+ 1. Combinatorial methods:
+  *Divide the free space into small pieces and connect these atomic elemnts.
+  *Advantages: Intuitive, good for finding initail approximate solns
+  *Disadvantages: usually don't scale well for large environments
+ 2. Potential Field Methods:
+  *Each obstacle creates a sort of anti-gravity field, which makes it hard for the vehicle to come near it.
+  *Disadvantages: may end up at local (as opposed to global) minima
+ 3. Optimal Control:
+  *Inputs (steering and throttle)
+  *Minimise cost function
+  *Go from start to end configuration and minimise cost function
+  *Hard to incorporate constraints from all other vehicles in algorithms that run fast
+ 4. Sampling-based methods
+  *Require somewhat eaiser to compute definition for the free space
+  *Use a collision detection module that probes the free space to see if a config is in collision or not
+  *Not all parts of the free space need to be explored to find a solution (vs combinatorial methods or optimal control)
+  *Explored paths are stored in a graph structure that can be explored using graph search algorithms like Dijkstra or A*.
+ These methods are probabilistically complete (can find a solution if you give it enough time) and sometimes probabilitistically optimal.
+ Optimistic: Underestimate the actual cost to go from the cell to the goal. A* is resolution optimal: the more granular the discretisation, the more optimal the solution.
+
+Hybrid A*
+Problem with A: A is discrete, but the world is continuous. -> we want provably executable paths (vs ones that may have turns that are too sharp in A*).
+Memorise exact x', y' and theta'
+ *Use these to figure out what the next grid cell to expand should be.
+ *Lack of completeness: there may be solutions that the algorithm doens't capture.
+  *Because only allow one continuous configuration: don't consider paths that enter a cell twice (traversing through different parts of the cell).
+ *Have correctness (solutions are drivable): as long as motion eqns are correct, can execute the path (smooth).
+  *Is an approximation, only correct to the extent the motion equations are correct.
+Hybrid A* in Practice
+ *omega: heading rate of change
+  *Being able to specify any omega regardless of state would mean car can turn about its Z-axis -> unrealistic for a car.
+ *So use bicycle model, which gives us an equation for omega.
+  *L: distance between front and rear axle
+  *delta: steering angle
+   *The more you add, the longer it takes the algorithm to compute -> use only max left, zero and max right angles.
+  *v: constant positive velocity
+ *If you don't add headings, you might say there is no solution when there is if you did add headings
+ *Admissible: understimates cost to the goal
+Implement Hybrid A* in C++
+ *A* is good for unstructured environments, does not take advantage of info like road structure in structured environments
+Frenet Coordinates (Review)
+ *s: longitudinal motion
+ *d: lateral motion
+ *Can use reference path calculated via A or Hybrid A as the 'centre' (instead of the center of the lane)
+Incorporating time matters because there is traffic
+ *Speed (as well as the trajectory) is important -> need itt to tell the full story.
+ *Time matters because there is traffic on highways (the environment changes over time)
+  *driving in traffic is a 3D problem
+Visualising this:
+ *If we take the path driving quickly, we will collide with another fast vehicle (red parallelogram)
+Trajectory
+ *Separate planninging in s dimension from planning in d dimension
+ *Plot s against t and d against t
+ *Can fully describe what vehicle did (incorporating time) using these two
+
+Structured Trajectory Generation
+Overview:
+ *Jerk minimisation: generating jerk minimising trajectories using polynomial
+  *Derivation of calculating coefficients of polynomials
+ *Evaluating an example trajectory and comparing it to other trajectories.
+  *Selecting the best trajectory to drive through
+
+Boundary Conditions
+ *Shift axes such that starting position is the origin
+ *Boundary conditions: Given fixed start and goal position and change in time between the two.
+  *Map an example trajectory -> find that it isn't possible because an instantaneous change in slope for s-t or d-t curves (kink in the curve) requires infinite acceleration
+ *Also need (conditions):
+  *Position continuity
+  *Velocity continuity
+  *Acceleration continuity
+  *etc.
+ *Jerk is rate of change of acceleration.
+  *Humans perceive this as uncomfortable.
+  *So want to minimise jerk.
+
+Jerk minimisation
+ *Find that derivatives of position of order six or greater must be zero to minimise jerk.
+  *So jerk-minimising trajectories can be represented as a fifth-order polynomial in t.
+  *Two polynomials: one for s, one for d.
+ *Finding the jerk minimisation coefficients
+  *Set initial time t_0 = 0 to reduce problem to that of tuning three paramters (vs six).
+  *Solve equations using a matrix (inverting the matrix).
+ *How polynomial solver is used
+  For s and d (separately): Input:
+  *initial state (position, velocity, acceleration), goal state, duration t Output:
+  *Six coefficients that uniquely define the polynomial that describes the longitudinal (/lateral) trajectory
+
+Feasibility (drivability) checks
+Implementation of feasibilty checks:
+ *Assume road is locally straight.
+ *Assume heading is aligned with the road.
+ *Max acceleration and max breaking acceleration should be computed using info about the friction of the road
+ *Letarel accelerator limits: for comfort and to avoid risk of rollover.
+ *L is distance between wheel axes,
+ *R is radius of circle of curvature
+ *Check velocity against values given by the map or the behavioural layer (max given by speed limit, min given by e.g. speed of other vehicles on a highway).
+ *Often the behavioural layer sends us an approximate end configuration (as opposed to a precise one).
+  *So sample a large number of end configuration in the approximate end config
+  *Generate jerk-minimising trajectories for each end config
+  *Discard all un-drivable trajectories and trajectories that involve collisions
+  *Rank trajectories by defining a cost function and minimising cost
+ *Examples of Cost functions
+  *Prioritise reducing lateral jerk over longitudinal jerk.
+  *Minimise distance to obstacles
+  *Minimise distance to center line
+  *Minimise time to goal
+ *Most hard work is in the details of balancing cost functions.
+

@@ -1,0 +1,83 @@
+Prediction
+ *E.g. predicting whether a car will go straight or turn right (to decide whether or not you can turn right now).
+ *Prediction is multi-modal: the probability distribution has multiple peaks.
+ *Output usually in the form of two trajectories, with a probability for each trajectory.
+
+Outline
+ *Model-based approaches: mathematical models of motions
+  *e.g. process models
+  *multi-model estimators -> handling uncertainty about which maneuver ran object will do in a particular situation
+ *Data-driven approaches: machine learning
+  *e.g.: trajectory clustering
+ *Hybrid approaches:
+  *intent classification (figure out what a driver wants to do) -> trajectory generation (how a driver is likely to do it)
+
+Model-based approach
+ *One model forgoing staright, one model forgoing right
+  *Calculate expected trajectories for each model
+  *Compare observed behaviour with expected trajectory
+ *Model takes into account physical behaviour of car and constraints imposed by traffic laws etc.
+  *May miss subtle patterns that may be picked up by data-driven approaches
+
+Purely data-driven approach: Trajectory clustering
+Stage 1: Offline Training
+ *Get a lot of trajectories (e.g. by placing static camera at intersection)
+ *Unsupervised clustering: car can either turn left, go straight or turn right. -> Expect three unsupervised clusters.
+ *May expect more than three clusters, e.g. for each action may have one cluster where the car stops in front of a traffic light first (red light) and one where the car doesn't stop (green light)
+Stage 2: Online Prediction
+ *Comparison using similarity measure used to perform clustering
+  *Update belief for each trajectory based on similarity of observed partial trajectory to prototype trajectory (expected trajectory for each action)
+  *Compute predicted trajectory for each cluster (e.g. by taking the most similar prototype trajectory)
+   *Still need to choose one predicted trajectory even if P(trajectory) same for each trajectory -> e.g. randomly choose one traj for now while broadcasting probabilities for all trajectories.
+
+Model-based approach: implementation details
+ *Identify common driver behaviours: e.g. (at an intersection) go straight, turn left, turn right
+ *Process model: mathematical description of object motion for behaviour.
+  *Fn that can be used to compute the state of an obj at time (t+1) from the state at time t.
+  *Incorporates some uncertainty.
+  *Each process model produces a predicted state at time (t+1).
+ *Update beliefs: compare predictions with observations
+ *Trajectory generation: use a multimodal estimation algorithm to derive the p(x) of each maneouver.
+ *Iterate through steps 3-4.
+
+Frenet Coordinates
+ *Motivation: Representing position on a road in a more intuitive way than Cartesian x,y coordinates.
+  *s: longitudinal displacement (distance along the road)
+  *d: lateral displacement (side-to-side position on the road)
+ *Another example: Car coming in a lane to the left.
+
+Process models
+ *Tradeoff between simplicity and accuracy when choosing process models.
+ *Lane-following models:
+  1. Linear point model: Assume can move in any direction at any time
+   *e.g. Car moves forward at every timestep and is assumed to keep a constant distance to the lane center
+  2. Introduce non-linearities (through sines and cosines)
+  3. Take into account a car is a non-holonomic system (state depends on the path taken to achieve the state)
+   *e.g. use bicycle model (input: steering angle (PID controller) and acceleration (constant v or constant a model, or PID controller with speed limit as the target))
+   *tend to strike a good balance between simplicity and accuracy
+  4. Even more complexity: dynamic bicycle model
+   *F_c,f: lateral force on tires at the front of the vehicle
+   *F_c,f: lateral force on tires at the rear of the vehicle
+   *Large uncertainty means increased accuracy from using these more complex models usually are not worth the additional compute required.
+paper website: https://d17h27t6h515a5.cloudfront.net/topher/2017/June/5953fc34_a-comparative-study-of-multiple-model-algorithms-for-maneuvering-target-tracking/a-comparative-study-of-multiple-model-algorithms-for-maneuvering-target-tracking.pdf
+
+Multimodal Estimation
+ *An approach: Autonomous Multiple Model Algorithm (AMM)
+  *M: number of process models/behaviours
+  *mu: probability of each behaviour
+  *AMM involves the ratio of likelihoods of an observation (for each model)
+
+Hybrid Approaches 
+ *Process models + Machine learning
+  *i.e. Replace multimodal estimator in model-based approach with a classifier such as Naive Bayes (possibly combined with a filter)
+
+Naive Bayes
+ *Assumes all features are independent (seems to work in practice)
+ *Problem more about
+  *selecting relevant features
+  *finding probabilities (guess/learn means and variances for differennt classes)
+ *Gaussian Naive Bayes: assume individual probabilities have a Gaussian distribution
+
+Conclusion
+ *Lesson simplified problem by considering only one object at a time.
+ *If you consider multiple objects at a time, you need to take into account interactions between different objects.

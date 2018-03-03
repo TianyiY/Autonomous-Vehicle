@@ -1,0 +1,89 @@
+Behaviour
+ *Modules from low frequency to high frequency
+ *(Modules in path planning are boxed)
+  *Behaviour planner has to incorporate much data (timescales 10s+)
+ *Sample output:
+  {
+    "target_lane_id" : 2,
+    "target_leading_vehicle_id": null,
+    "target_speed" : 15.0,
+    "seconds_to_reach_target" : 10.0,
+  }
+
+The Behaviour Problem
+ *Behaviour planner:
+  *Takes map, route and predictions as input
+  *Output: suggest states (maneuvers) that are
+ *Trajectory planner:
+  *Responsible for executing maneuvers in a collision-free, smooth and safe way Driver executes and is responsible for safety (if navigator issues instructions that will immediately result in a crash, the driver will wait to execute) Navigator
+
+A solution: Finite State Machines
+ *Discrete states connected by transitions
+ *Begin at some start state
+ *Decide to go to which state to transition to using a state transition function
+Strengths:
+ *Self-documenting, easy to reason about: map logical state to physical state
+ *Maintainable (for small state spaces)
+Weaknesses:
+ *Easily abused: may just continue adding new states if problem changes or you discover things you hadn't considered before, leading to sloppy code
+ *Not maintainable (for large state spaces)
+
+States for self-driving cars
+ *Tradeoff between wanting a small, maintainable state space and wanting to include all the states we need
+Sample list of state spaces for highway driving:
+(Ideation process: Brainstorm list of ideas and prune list)
+Pruned to
+ *Keep lane
+ *Change lane left
+ *Change lane right
+ *Prepare lane change left
+  *Needed because pre-change lane left,
+   *it's safer to match the speed of the left lane
+   *without this manouver, you'd have to just wait for a gap to appear in the left lane
+   *Unclear when to turn on the turn signal (ideally want to turn it on a few seconds before lane change)
+ *Prepare lane change right
+(Pruned many states because they are implementations of e.g. keep lane, change lane left/right).
+
+Transition Functions
+ *Inputs
+  *Predictions, map, speed limit, localisation data, current state
+ *Implementation (Pseudocode)
+  *Generate rough trajectories for each accessible 'next state' and select the state with the trajectory with the lowest cost.
+
+Designing cost functions
+ 1. Vehicle speed
+  *Want te get to destination quickly but don't want to break the law.
+   *Suppose maximum cost if you're above the speed limit
+   *Zero cost at
+   *Cost of not moving: bad but not as bad as exceeding the speed limit.
+   *Arbitrarily connect points we've plotted with a linear function
+   *May want to parameterise these
+ 2. Lane Choice
+  *Options:
+   *Lane Change (LC)
+   *Keep Lane (KL)
+ 3. Establish relevant variables:
+  *Delta_s = s_G - s
+   *Longitudinal distance the vehicle has before it needs to get to the goal lane
+   *Cost should be inversely propertional to Delta_s (lane change costs more important when we're closer to the goal because it's more likely we won't make it in time)
+  *Delta_d = d_G - d_LC/KL
+   *lateral distance between goal lane and options being considered
+   *Cost should be propertional to Delta_d
+  *Want to normalise cost such that cost is always in interval [0,1].
+   *choose e.g. cost = 1 - e^(-|Delta_d|/Delta_s)
+
+Discussion of cost function design
+ *New problems like not being aggressive enough about turning left at traffic lights
+ *Regression testing: define some set of test cases (situations with corresponding expected behaviour) and testing them when redesigning cost functions
+ *Ideally each cost function has a specific function
+  *-> e.g. Define a few cost functinos associated with speed (one for safety, one for legality)
+ *Different priorities in different situations
+  *add 'obeys traffic rules' cost function if at an intersection and traffic light just turned yellow.
+
+Scheduling Compute Time
+ *Behaviour module decisions take longer time and don't change as quickly.
+ *Behaviour needs info from prediction and localisation to begin its second cycle
+  *But prediction in the middle of an update cycle.
+  *Use slightly-out-of-date data so we don't block the pipeline for downsteram components (which have higher update frequency)
+
+Implement a Behaviour planner

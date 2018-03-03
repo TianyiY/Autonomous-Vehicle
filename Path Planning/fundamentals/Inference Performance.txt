@@ -1,0 +1,31 @@
+Motivation
+ *Why performance (speed) matters: Can’t use cloud computing resources due to latency, have to make real-time predictions using on-device hardware.
+ *Semantic segmentation is computationally expensive. (img) Can improve performance by 3-5x using optimisations.
+  *Freeze TensorFlow graph and save to a protobuf file
+   *In order to convert TF variables into constants -> reduces the number of operations, increases speed
+   *other benefits
+  *Graph transforms
+
+Fusion
+ *Fuse graph operations: reduces number of ops
+ *Each layer has to stores tensors. Only calls kernels once. 
+ *Saves both memory and time.
+ *Typically only use during inference because we may want to preserve graph flexibility (add or remove layers) during training.
+ *Can do manually by coding a kernel that performs three fused ops together. 
+ *Can automate by using optimizer than fuses common layers together.
+Most training done in single precision (32 bits, 23 significands). Increases bandwidth by 2x. Inference can be done in lower precision, e.g. half-precision (16 bits).
+ *During training, error from using lower precision is amplified during back-propagation. 
+
+Quantization
+ *Using integers instead of floating points
+ *Saves CPU and memory resources:
+  *Integer arithmetic can be faster than floating point arithmetic
+  *More arithmetic throughput
+  *Lower memory footprint
+ *Conversions:
+  *Linear conversion
+   *Map 0:0, 1:128, 10:256.
+
+AOT vs JIT compilation
+ *JIT: Just In Time
+ *AOT: Ahead Of Time
